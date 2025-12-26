@@ -1,0 +1,6 @@
+Saad,admin123@gmail.com,12345,admin123,Admin
+Muhammad saad,03152458881,ms22458881@gmail.com,saad123,,,Customer
+hasan khan,03002350138,hasan123@gmail.com,hasan123,,,Customer
+ayesha khan,0314456881,ayesha123@gmail.com,ayesha123,,,Customer
+adadadada,03125458881,ms2350138@gmail.com,sadadada,Customer
+ali,ali123@gmail.com,03002458881,ali123,,SubAdmin
