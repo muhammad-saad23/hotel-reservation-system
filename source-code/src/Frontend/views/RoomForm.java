@@ -1,7 +1,6 @@
-package Frontend.views.Admin.Room;
+package Frontend.views;
 
 import backend.Roles.Admin;
-import backend.Rooms.Room;
 import backend.RoomsManagement.RoomManagement;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -22,23 +21,23 @@ public class RoomForm extends Application {
     }
 
     public RoomForm() {
-        this.admin = new Admin("Saad", "admin@hotel.com", "000", "pass", new RoomManagement());
+        this.admin = new Admin("Saad", "admin@hotel.com", "000", "pass","Admin", new RoomManagement());
     }
 
     @Override
     public void start(Stage stage) {
-        // BorderPane is best for Sidebar and Topbar
+
         BorderPane root = new BorderPane();
 
-        // 1. Sidebar (Left)
+
         VBox sidebar = createSidebar();
         root.setLeft(sidebar);
 
-        // 2. Topbar (Top)
+
         HBox topbar = createTopbar();
         root.setTop(topbar);
 
-        // 3. Main Form Content (Center)
+
         VBox formContent = getForm();
         root.setCenter(formContent);
 
@@ -48,7 +47,7 @@ public class RoomForm extends Application {
         stage.show();
     }
 
-    // --- Sidebar Implementation ---
+
     private VBox createSidebar() {
         VBox sidebar = new VBox(15);
         sidebar.setPrefWidth(240);
@@ -73,7 +72,6 @@ public class RoomForm extends Application {
         return sidebar;
     }
 
-    // --- Topbar Implementation ---
     private HBox createTopbar() {
         HBox header = new HBox();
         header.setPadding(new Insets(15, 30, 15, 30));

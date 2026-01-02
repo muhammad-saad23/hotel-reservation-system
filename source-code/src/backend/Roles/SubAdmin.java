@@ -5,9 +5,9 @@ import backend.RoomsManagement.RoomManagement;
 public class SubAdmin extends User {
     private RoomManagement manager;
 
-    public SubAdmin(String name, String email, String phone, String password,
+    public SubAdmin(String name, String email, String phone, String password,String role,
                    RoomManagement manager) {
-        super(name, email, phone, password);
+        super(name, email, phone, password,role);
         this.manager = manager;
     }
 

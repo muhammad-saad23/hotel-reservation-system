@@ -32,9 +32,8 @@ public class AuthService {
                 if (d.length >= 5) {
                     String role = d[d.length - 1].trim();
                     String fileEmail = "";
-                    String filePassword = d[3].trim(); // Password hamesha index 3 par hai
+                    String filePassword = d[3].trim();
 
-                    // Role-based Email Index selection
                     if (role.equalsIgnoreCase("Admin") || role.equalsIgnoreCase("SubAdmin")) {
                         fileEmail = d[1].trim();
                     } else {
@@ -43,9 +42,9 @@ public class AuthService {
 
                     if (fileEmail.equalsIgnoreCase(email.trim()) && filePassword.equals(password.trim())) {
                         return switch (role) {
-                            case "Admin" -> new Admin(d[0], d[1], d[2], d[3], roomManager);
-                            case "SubAdmin" -> new SubAdmin(d[0], d[1], d[2], d[3], roomManager);
-                            case "Customer" -> new Customer(d[0], d[2], d[1], d[3], roomManager);
+                            case "Admin" -> new Admin(d[0], d[1], d[2], d[3],d[4], roomManager);
+                            case "SubAdmin" -> new SubAdmin(d[0], d[1], d[2], d[3],d[4], roomManager);
+                            case "Customer" -> new Customer(d[0], d[2], d[1], d[3],d[4], roomManager);
                             default -> null;
                         };
                     }
@@ -59,9 +58,11 @@ public class AuthService {
 
     private static User createUserByRole(String[] d, String role) {
         if (role.equalsIgnoreCase("Admin")) {
-            return new Admin(d[0], d[1], d[2], d[3], roomManager);
+            return new Admin(d[0], d[1], d[2], d[3],d[4], roomManager);
+        } else if (role.equalsIgnoreCase("SubAdmin")) {
+            return new Customer(d[0], d[1], d[2], d[3],d[4], roomManager);
         } else if (role.equalsIgnoreCase("Customer")) {
-            return new Customer(d[0], d[1], d[2], d[3], roomManager);
+            return new Customer(d[0], d[1], d[2], d[3],d[4], roomManager);
         }
         return null;
     }

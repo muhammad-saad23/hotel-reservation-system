@@ -5,12 +5,15 @@ public abstract class User {
     private String email;
     private String phone;
     private String password;
+    private String role;
 
-    public User(String name,String email,String phone,String password){
+    public User(String name,String email,String phone,String password,String role){
         this.name=name;
         this.email=email;
         this.phone=phone;
         this.password=password;
+        this.role=role;
+
     }
 
     public String getName() {
@@ -29,21 +32,7 @@ public abstract class User {
         return password;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public String getRole() {return role;}
 
     public boolean login(String email, String password) {
         return this.email.equals(email) && this.password.equals(password);

@@ -7,14 +7,14 @@ public class Customer extends User {
 
     private RoomManagement manager;
 
-    public Customer(String name, String email, String phone, String password,
+    public Customer(String name, String email, String phone, String password,String role,
                     RoomManagement manager) {
-        super(name, email, phone, password);
+        super(name, email, phone, password,role);
         this.manager = manager;
     }
 
-    public Customer(String email, String password) {
-        super("Unknown", email, "N/A", password);
+    public Customer(String email, String password,String role) {
+        super("Unknown", email, "N/A", password,role);
         this.manager = new RoomManagement();
     }
 

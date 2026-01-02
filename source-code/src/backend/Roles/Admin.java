@@ -7,11 +7,10 @@ public class Admin extends User{
     private final String position="Admin";
     private RoomManagement manager;
 
-    public Admin(String name, String email, String phone, String password, RoomManagement manager){
-        super(name,email,phone,password);
+    public Admin(String name, String email, String phone, String password,String role, RoomManagement manager){
+        super(name,email,phone,password,role);
         this.manager=manager;
     }
-
 
 
     public String getPosition() {
