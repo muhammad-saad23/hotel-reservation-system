@@ -7,8 +7,8 @@ public class Admin extends User{
     private final String position="Admin";
     private RoomManagement manager;
 
-    public Admin(String name, String email, String phone, String password,String role, RoomManagement manager){
-        super(name,email,phone,password,role);
+    public Admin(int id,String name, String email, String phone, String password,String role, RoomManagement manager){
+        super(id,name,email,phone,password,role);
         this.manager=manager;
     }
 
@@ -30,7 +30,7 @@ public class Admin extends User{
 
     @Override
     public String toString() {
-        return getName()+","+getEmail()+","+getPhone()+","+getPassword()+","+getPosition()+",Admin";
+        return  getId()+","+getName()+","+getEmail()+","+getPhone()+","+getPassword()+","+getPosition()+",Admin";
     }
 
     public void addRoom(Room room){
@@ -42,8 +42,8 @@ public class Admin extends User{
     public void deleteRoom(int RoomNumber){
         manager.deleteRoom(RoomNumber);
     }
-    public void updateRoom(int RoomNumber,String type, Double price, Boolean available){
-        manager.updateRoom(RoomNumber, type, price, available);
+    public void updateRoom(int RoomNumber,String description,String type, Double price, Boolean isAvailable){
+        manager.updateRoom(RoomNumber,description, type, price, isAvailable);
     }
 
 }

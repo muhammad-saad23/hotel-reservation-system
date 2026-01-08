@@ -29,7 +29,7 @@ public class Register {
         regCard.setStyle("-fx-background-color: white; -fx-background-radius: 20; " +
                 "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 10);");
 
-        Label title = new Label("Customer Registration");
+        Label title = new Label("Registration");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
 
         Label subtitle = new Label("Join us! Create your account to book rooms.");
@@ -75,10 +75,14 @@ public class Register {
                 return;
             }
 
-            Customer newCustomer = new Customer(name, phone, email, password, "Customer", new RoomManagement());
+            // --- Unique ID Generate Karein ---
+            int nextId = AuthService.getNextId();
+
+            // Customer object create karein (ID pass kar di gai hai)
+            Customer newCustomer = new Customer(nextId, name, email, phone, password, "Customer", new RoomManagement());
 
             if (AuthService.registerUser(newCustomer)) {
-                showAlert(AlertType.INFORMATION, "Success", "Customer account created successfully!");
+                showAlert(AlertType.INFORMATION, "Success", "Customer account created successfully");
                 Login login = new Login();
                 stage.getScene().setRoot(login.getLayout(stage));
             } else {

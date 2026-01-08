@@ -7,14 +7,14 @@ public class Customer extends User {
 
     private RoomManagement manager;
 
-    public Customer(String name, String email, String phone, String password,String role,
+    public Customer(int id,String name, String email, String phone, String password,String role,
                     RoomManagement manager) {
-        super(name, email, phone, password,role);
+        super(id,name, email, phone, password,role);
         this.manager = manager;
     }
 
-    public Customer(String email, String password,String role) {
-        super("Unknown", email, "N/A", password,role);
+    public Customer(int id,String email, String password,String role) {
+        super( id,"Unknown", email, "N/A", password,role);
         this.manager = new RoomManagement();
     }
 
@@ -31,6 +31,6 @@ public class Customer extends User {
 
     @Override
     public String toString() {
-        return getName() + "," + getEmail() + "," + getPhone() + "," + getPassword() + ",Customer";
+        return getId()+","+getName() + "," + getEmail() + "," + getPhone() + "," + getPassword() + ",Customer";
     }
 }

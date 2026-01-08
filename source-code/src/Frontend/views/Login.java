@@ -2,9 +2,11 @@ package Frontend.views;
 
 import FileHandling.AuthService;
 import Frontend.views.Dashboard.*;
+import backend.Sessions.UserSession;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -14,6 +16,14 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class Login {
+
+    public void show(Stage stage) {
+        Scene scene = new Scene(getLayout(stage), 800, 600);
+        stage.setScene(scene);
+        stage.setTitle("Royal Hotel - Login");
+        stage.centerOnScreen();
+        stage.show();
+    }
 
     public Parent getLayout(Stage stage) {
         StackPane root = new StackPane();
@@ -45,7 +55,6 @@ public class Login {
         loginBtn.setStyle("-fx-background-color: #ff8c00; -fx-text-fill: white; -fx-font-weight: bold; " +
                 "-fx-background-radius: 10; -fx-padding: 12; -fx-cursor: hand;");
 
-        // LOGIN LOGIC WITH ROLES
         loginBtn.setOnAction(e -> {
             String email = emailField.getText().trim();
             String password = passwordField.getText().trim();
@@ -56,8 +65,16 @@ public class Login {
                 backend.Roles.User user = AuthService.loginUser(email, password);
 
                 if (user != null) {
-                    String role = user.getRole().toUpperCase();
-                    Dashboard userDashboard;
+                    UserSession.setSession(
+                        user.getId(),
+                        user.getName(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getRole()
+                    );
+
+                    String role = user.getRole().trim().toUpperCase();
+                    Dashboard userDashboard = null;
 
                     switch (role) {
                         case "ADMIN":
@@ -67,18 +84,25 @@ public class Login {
                             userDashboard = new SubAdminDashboard();
                             break;
                         case "CUSTOMER":
-                            // Aap yahan CustomerDashboard() bhi add kar sakte hain agar banaya hai
-                            showAlert(Alert.AlertType.INFORMATION, "Success", "Customer Login Successful!");
-                            return;
+                            userDashboard = new AdminDashboard();
+                            break;
                         default:
-                            showAlert(Alert.AlertType.ERROR, "Role Error", "No dashboard assigned for this role.");
+                            showAlert(Alert.AlertType.ERROR, "Role Error", "Role '" + role + "' not recognized.");
                             return;
                     }
 
-                    stage.getScene().setRoot(userDashboard.getLayout(stage));
+                    if (userDashboard != null) {
+                        Parent layout = userDashboard.getLayout(stage);
+                        Scene dashboardScene = new Scene(layout, 1280, 800);
+
+                        stage.setScene(dashboardScene);
+                        stage.centerOnScreen();
+                        showAlert(Alert.AlertType.INFORMATION, "Login Success", "Welcome, " + user.getName());
+                    }
 
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid email or password.");
+                    passwordField.clear();
                 }
             }
         });

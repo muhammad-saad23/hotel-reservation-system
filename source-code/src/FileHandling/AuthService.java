@@ -3,15 +3,22 @@ package FileHandling;
 import backend.Roles.*;
 import backend.RoomsManagement.RoomManagement;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AuthService {
     private static final String FILE_PATH = "users.txt";
     private static RoomManagement roomManager = new RoomManagement();
 
-
     public static boolean registerUser(User user) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
-            writer.write(user.toString());
+            if (user instanceof SubAdmin) {
+                writer.write(user.toString());
+            } else {
+                writer.write(String.format("%d,%s,%s,%s,%s,%s",
+                        user.getId(), user.getName(), user.getEmail(),
+                        user.getPhone(), user.getPassword(), user.getRole()));
+            }
             writer.newLine();
             return true;
         } catch (IOException e) {
@@ -26,44 +33,85 @@ public class AuthService {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
                 String[] d = line.split(",");
+                if (d.length < 6) continue;
 
-                if (d.length >= 5) {
-                    String role = d[d.length - 1].trim();
-                    String fileEmail = "";
-                    String filePassword = d[3].trim();
+                String fEmail = d[2].trim();
+                String fPass = d[4].trim();
 
-                    if (role.equalsIgnoreCase("Admin") || role.equalsIgnoreCase("SubAdmin")) {
-                        fileEmail = d[1].trim();
-                    } else {
-                        fileEmail = d[2].trim();
+                if (fEmail.equalsIgnoreCase(email.trim()) && fPass.equals(password.trim())) {
+                    int id = Integer.parseInt(d[0].trim());
+                    String name = d[1].trim();
+                    String phone = d[3].trim();
+                    String role = d[5].trim();
+
+                    if (role.equalsIgnoreCase("SubAdmin")) {
+                        String perms = (d.length >= 7) ? d[6].trim() : "None";
+                        return new SubAdmin(id, name, fEmail, phone, fPass, role, roomManager, perms);
                     }
 
-                    if (fileEmail.equalsIgnoreCase(email.trim()) && filePassword.equals(password.trim())) {
-                        return switch (role) {
-                            case "Admin" -> new Admin(d[0], d[1], d[2], d[3],d[4], roomManager);
-                            case "SubAdmin" -> new SubAdmin(d[0], d[1], d[2], d[3],d[4], roomManager);
-                            case "Customer" -> new Customer(d[0], d[2], d[1], d[3],d[4], roomManager);
-                            default -> null;
-                        };
-                    }
+                    return switch (role.toLowerCase()) {
+                        case "admin" -> new Admin(id, name, fEmail, phone, fPass, role, roomManager);
+                        case "customer" -> new Customer(id, name, fEmail, phone, fPass, role, roomManager);
+                        default -> null;
+                    };
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private static User createUserByRole(String[] d, String role) {
-        if (role.equalsIgnoreCase("Admin")) {
-            return new Admin(d[0], d[1], d[2], d[3],d[4], roomManager);
-        } else if (role.equalsIgnoreCase("SubAdmin")) {
-            return new Customer(d[0], d[1], d[2], d[3],d[4], roomManager);
-        } else if (role.equalsIgnoreCase("Customer")) {
-            return new Customer(d[0], d[1], d[2], d[3],d[4], roomManager);
-        }
-        return null;
+    public static List<SubAdmin> getAllSubAdmins() {
+        List<SubAdmin> list = new ArrayList<>();
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return list;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] d = line.split(",");
+                if (d.length >= 6 && d[5].trim().equalsIgnoreCase("SubAdmin")) {
+                    int id = Integer.parseInt(d[0].trim());
+                    String perms = (d.length >= 7) ? d[6].trim() : "None";
+                    list.add(new SubAdmin(id, d[1].trim(), d[2].trim(), d[3].trim(), d[4].trim(), d[5].trim(), roomManager, perms));
+                }
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    public static boolean isEmailExists(String email) {
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return false;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length >= 3 && data[2].trim().equalsIgnoreCase(email.trim())) return true;
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+        return false;
+    }
+
+    public static int getNextId() {
+        int maxId = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length > 0) {
+                    try {
+                        int id = Integer.parseInt(data[0].trim());
+                        if (id > maxId) maxId = id;
+                    } catch (Exception e) {}
+                }
+            }
+        } catch (Exception e) {}
+        return maxId + 1;
     }
 }

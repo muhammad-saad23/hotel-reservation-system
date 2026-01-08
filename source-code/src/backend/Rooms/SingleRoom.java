@@ -2,9 +2,9 @@ package backend.Rooms;
 
 public class SingleRoom extends Room
 {
-   public SingleRoom(int RoomNumber,String RoomType,double pricePerNight)
+   public SingleRoom(int RoomNumber,String description,String RoomType,double pricePerNight,boolean isAvailable)
     {
-        super(RoomNumber, RoomType,pricePerNight);
+        super(RoomNumber, description, RoomType, pricePerNight, isAvailable);
     }
 
     @Override public double calculatePrice(int days)

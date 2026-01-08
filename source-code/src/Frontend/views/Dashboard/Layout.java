@@ -1,126 +1,147 @@
 package Frontend.views.Dashboard;
 
-import Frontend.views.Login; // Login view ko import karna zaroori hai
+import Frontend.views.List.RoomList;
+import Frontend.views.List.SubAdminList;
+import Frontend.views.Login;
+import backend.Sessions.UserSession;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
-public class Layout {
+public class Layout implements Dashboard{
+    private Stage stage;
 
-    public BorderPane getLayout(Stage stage, String role, Node centerContent) {
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #f4f7fa;");
-
-        VBox sidebar = createSidebar(stage, role);
-        HBox topbar = createTopbar(role);
-
-        // Sidebar aur Topbar ke darmiyan content area
-        VBox mainContent = new VBox(topbar, centerContent);
-        VBox.setVgrow(centerContent, Priority.ALWAYS);
-
-        root.setLeft(sidebar);
-        root.setCenter(mainContent);
-
-        return root;
+    public Layout(Stage stage) {
+        this.stage = stage;
     }
 
-    private VBox createSidebar(Stage stage, String role) {
-        VBox sidebar = new VBox(15);
-        sidebar.setPrefWidth(260);
+    @Override
+    public BorderPane getLayout(Stage stage) {
+        return createLayout(new VBox(new Label("Welcome")), "Guest", "User");
+    }
+
+    public BorderPane createLayout(VBox mainContent, String role, String name) {
+        BorderPane layout = new BorderPane();
+        layout.setStyle("-fx-background-color: #f8fafc;");
+
+        VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(30, 20, 30, 20));
-        sidebar.setStyle("-fx-background-color: #1e293b;"); // Professional Dark Slate
+        sidebar.setPrefWidth(260);
 
-        Label logo = new Label("LUXE STAY");
-        logo.setTextFill(Color.WHITE);
-        logo.setFont(Font.font("Poppins", FontWeight.BOLD, 24));
-        logo.setPadding(new Insets(0, 0, 40, 0));
-        logo.setAlignment(Pos.CENTER);
-        logo.setMaxWidth(Double.MAX_VALUE);
+        String sidebarColor;
+        String brandTitle;
 
-        VBox navContainer = new VBox(10);
-
-        // Common Buttons
-        navContainer.getChildren().add(createNavButton("📊  Dashboard", true));
-        navContainer.getChildren().add(createNavButton("🏨  Manage Rooms", false));
-        navContainer.getChildren().add(createNavButton("📅  Bookings", false));
-
-        // Role based buttons
-        if (role.equalsIgnoreCase("ADMIN")) {
-            navContainer.getChildren().add(createNavButton("👥  Staff Members", false));
-            navContainer.getChildren().add(createNavButton("⚙️  Settings", false));
+        if (role.equalsIgnoreCase("Admin")) {
+            sidebarColor = "#0f172a";
+            brandTitle = "🏨 ROYAL ADMIN";
+        } else if (role.equalsIgnoreCase("Guest")) {
+            sidebarColor = "#1e293b";
+            brandTitle = "✨ MY STAY";
+        } else {
+            sidebarColor = "#134e4a";
+            brandTitle = "🛎️ STAFF PORTAL";
         }
+
+        sidebar.setStyle("-fx-background-color: " + sidebarColor + "; -fx-background-radius: 0 20 20 0;");
+
+        Label brand = new Label(brandTitle);
+        brand.setStyle("-fx-text-fill: #fbbf24; -fx-font-size: 22px; -fx-font-weight: bold; -fx-padding: 0 0 30 0;");
+        sidebar.getChildren().add(brand);
+
+        if (role.equalsIgnoreCase("Admin")) {
+            addMenuButton(sidebar, "📊  Dashboard", e -> {
+                AdminDashboard adminDashboard=new AdminDashboard();
+                this.stage.getScene().setRoot(adminDashboard.getLayout(this.stage));
+            });
+            addMenuButton(sidebar, "🛌  Rooms", e -> {
+                new RoomList().show(stage);
+            });
+
+
+            addMenuButton(sidebar, "👥 Staff", e ->{
+                new SubAdminList().show(stage);
+            });
+
+        } else if (role.equalsIgnoreCase("SubAdmin")) {
+            addMenuButton(sidebar, "📊  Dashboard", e -> {
+                SubAdminDashboard subAdminDashboard=new SubAdminDashboard();
+                this.stage.getScene().setRoot(subAdminDashboard.getLayout(this.stage));
+            });
+        }
+
+        Separator sep = new Separator();
+        sep.setPadding(new Insets(10, 0, 10, 0));
+        sep.setOpacity(0.2);
+        sidebar.getChildren().add(sep);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
+        sidebar.getChildren().add(spacer);
 
-        // Logout Button Logic
-        Button btnLogout = new Button("🚪 Logout");
-        btnLogout.setMaxWidth(Double.MAX_VALUE);
-        btnLogout.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 10; -fx-cursor: hand;");
+        Button btnLogout = createMenuBtn("🚪  Sign Out");
+        btnLogout.setStyle("-fx-background-color: #e11d48; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 10; -fx-font-weight: bold;");
 
         btnLogout.setOnAction(e -> {
-            // Wapas Login Screen par jane ke liye
-            Login loginView = new Login();
-            stage.getScene().setRoot(loginView.getLayout(stage));
+            UserSession.clearSession();
+            Login login = new Login();
+            login.show(this.stage);
         });
+        sidebar.getChildren().add(btnLogout);
 
-        sidebar.getChildren().addAll(logo, navContainer, spacer, btnLogout);
-        return sidebar;
-    }
-
-    private HBox createTopbar(String role) {
         HBox topbar = new HBox();
         topbar.setPadding(new Insets(15, 30, 15, 30));
-        topbar.setAlignment(Pos.CENTER_LEFT);
-        topbar.setMinHeight(80);
-        topbar.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);");
+        topbar.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 10, 0, 0, 4);");
+        topbar.setAlignment(Pos.CENTER_RIGHT);
 
-        Label pageTitle = new Label(role + " Portal");
-        pageTitle.setFont(Font.font("System", FontWeight.BOLD, 20));
-        pageTitle.setTextFill(Color.web("#334155"));
+        String displayName = UserSession.getLoggedUserName();
+        if (displayName == null||displayName.isEmpty()) {
+            displayName="Guest";
+        }
+        Label nameLabel = new Label(displayName);
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #334155; -fx-font-size: 14px;");
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        String currentRole=UserSession.getLoggedUserRole();
+        String avatarColor = (currentRole!=null &&currentRole.equalsIgnoreCase("Admin"))? "#fbbf24" : "#38bdf8";
 
-        HBox profile = new HBox(12);
-        profile.setAlignment(Pos.CENTER);
+        Circle profileCircle = new Circle(18, Color.web(avatarColor));
 
-        Label name = new Label("Welcome, " + role);
-        name.setStyle("-fx-font-weight: bold; -fx-text-fill: #475569;");
+        Label initial = new Label(displayName.substring(0, 1).toUpperCase());
+        initial.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-        Circle avatar = new Circle(20, Color.web("#cbd5e1"));
+        StackPane avatar = new StackPane(profileCircle, initial);
+        HBox userBox = new HBox(12, nameLabel, avatar);
+        userBox.setAlignment(Pos.CENTER);
+        topbar.getChildren().add(userBox);
 
-        profile.getChildren().addAll(name, avatar);
-        topbar.getChildren().addAll(pageTitle, spacer, profile);
+        layout.setLeft(sidebar);
+        layout.setTop(topbar);
 
-        return topbar;
+        StackPane contentArea = new StackPane(mainContent);
+        contentArea.setPadding(new Insets(25));
+        layout.setCenter(contentArea);
+
+        return layout;
     }
 
-    private Button createNavButton(String text, boolean isActive) {
+    private void addMenuButton(VBox container, String text, javafx.event.EventHandler<javafx.event.ActionEvent> event) {
+        Button btn = createMenuBtn(text);
+        btn.setOnAction(event);
+        container.getChildren().add(btn);
+    }
+
+    private Button createMenuBtn(String text) {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
         btn.setAlignment(Pos.CENTER_LEFT);
+        btn.setCursor(javafx.scene.Cursor.HAND);
+        btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14px; -fx-padding: 12; -fx-background-radius: 8;");
 
-        String baseStyle = "-fx-background-radius: 10; -fx-padding: 12 15; -fx-font-size: 14px; -fx-cursor: hand;";
-        String activeStyle = baseStyle + "-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;";
-        String idleStyle = baseStyle + "-fx-background-color: transparent; -fx-text-fill: #94a3b8;";
-        String hoverStyle = baseStyle + "-fx-background-color: #334155; -fx-text-fill: white;";
-
-        if (isActive) {
-            btn.setStyle(activeStyle);
-        } else {
-            btn.setStyle(idleStyle);
-            // Hover Effects
-            btn.setOnMouseEntered(e -> btn.setStyle(hoverStyle));
-            btn.setOnMouseExited(e -> btn.setStyle(idleStyle));
-        }
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: #fbbf24; -fx-padding: 12; -fx-background-radius: 8;"));
+        btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-padding: 12; -fx-background-radius: 8;"));
 
         return btn;
     }

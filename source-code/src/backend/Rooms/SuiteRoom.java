@@ -1,9 +1,9 @@
 package backend.Rooms;
 
 public class SuiteRoom extends Room{
-    public SuiteRoom(int RoomNumber,String RoomType,double pricePerNight)
+    public SuiteRoom(int RoomNumber,String description,String RoomType,double pricePerNight,boolean isAvailable)
     {
-        super(RoomNumber, RoomType,pricePerNight);
+        super(RoomNumber,description, RoomType,pricePerNight,isAvailable);
     }
 
 

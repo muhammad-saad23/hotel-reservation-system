@@ -6,4 +6,5 @@ module Hotel.Reservation.System {
     exports Frontend.views;
     exports Frontend.views.Dashboard;
     exports App;
+    exports Frontend.views.Forms;
 }
