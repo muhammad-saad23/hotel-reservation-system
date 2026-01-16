@@ -14,6 +14,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import java.util.regex.Pattern;
 
 public class Login {
 
@@ -36,14 +37,14 @@ public class Login {
         loginCard.setStyle("-fx-background-color: white; -fx-background-radius: 20; " +
                 "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 10);");
 
-        Label title = new Label("Log In");
+        Label title = new Label("Staff Login");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
 
-        Label subtitle = new Label("Please enter your credentials to continue.");
-        subtitle.setTextFill(Color.GRAY);
+        Label subtitle = new Label("Enter your credentials to manage hotel.");
+        subtitle.setTextFill(Color.web("#777777"));
 
         TextField emailField = new TextField();
-        emailField.setPromptText("Email");
+        emailField.setPromptText("Email Address");
         applyInputStyle(emailField);
 
         PasswordField passwordField = new PasswordField();
@@ -52,95 +53,91 @@ public class Login {
 
         Button loginBtn = new Button("Login");
         loginBtn.setMaxWidth(Double.MAX_VALUE);
-        loginBtn.setStyle("-fx-background-color: #ff8c00; -fx-text-fill: white; -fx-font-weight: bold; " +
-                "-fx-background-radius: 10; -fx-padding: 12; -fx-cursor: hand;");
+        loginBtn.setPrefHeight(45);
+        loginBtn.setStyle("-fx-background-color: #134e4a; -fx-text-fill: white; -fx-font-weight: bold; " +
+                "-fx-background-radius: 10; -fx-cursor: hand;");
 
         loginBtn.setOnAction(e -> {
             String email = emailField.getText().trim();
             String password = passwordField.getText().trim();
 
             if (email.isEmpty() || password.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Login Error", "Please fill in all fields.");
-            } else {
-                backend.Roles.User user = AuthService.loginUser(email, password);
+                showAlert(Alert.AlertType.ERROR, "Error", "Please fill in all fields.");
+                return;
+            }
 
-                if (user != null) {
-                    UserSession.setSession(
-                        user.getId(),
-                        user.getName(),
-                        user.getEmail(),
-                        user.getPhone(),
-                        user.getRole()
-                    );
+            if (!isValidEmail(email)) {
+                showAlert(Alert.AlertType.WARNING, "Invalid Email", "Please enter a valid email address (e.g. user@example.com).");
+                return;
+            }
 
-                    String role = user.getRole().trim().toUpperCase();
-                    Dashboard userDashboard = null;
+            backend.Roles.User user = AuthService.loginUser(email, password);
 
-                    switch (role) {
-                        case "ADMIN":
-                            userDashboard = new AdminDashboard();
-                            break;
-                        case "SUBADMIN":
-                            userDashboard = new SubAdminDashboard();
-                            break;
-                        case "CUSTOMER":
-                            userDashboard = new AdminDashboard();
-                            break;
-                        default:
-                            showAlert(Alert.AlertType.ERROR, "Role Error", "Role '" + role + "' not recognized.");
-                            return;
-                    }
+            if (user != null) {
+                String role = user.getRole().trim().toUpperCase();
 
-                    if (userDashboard != null) {
-                        Parent layout = userDashboard.getLayout(stage);
-                        Scene dashboardScene = new Scene(layout, 1280, 800);
-
-                        stage.setScene(dashboardScene);
-                        stage.centerOnScreen();
-                        showAlert(Alert.AlertType.INFORMATION, "Login Success", "Welcome, " + user.getName());
-                    }
-
-                } else {
-                    showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid email or password.");
-                    passwordField.clear();
+                if (role.equalsIgnoreCase("BLOCKED")) {
+                    showAlert(Alert.AlertType.ERROR, "Access Denied", "You are blocked! Kindly contact with Admin.");
+                    return;
                 }
+
+                if (role.equalsIgnoreCase("CUSTOMER")) {
+                    showAlert(Alert.AlertType.ERROR, "Not Allowed", "Customers are not allowed to access the Staff Portal.");
+                    return;
+                }
+
+                UserSession.setSession(user.getId(), user.getName(), user.getEmail(), user.getPhone(), user.getRole(), user.getPermissions());
+                navigateToDashboard(stage, user.getRole());
+
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid email or password.");
             }
         });
 
         Text footerBase = new Text("Don’t have an account? ");
         Hyperlink signUpLink = new Hyperlink("Sign Up");
+        signUpLink.setStyle("-fx-text-fill: #1e90ff; -fx-font-weight: bold;");
+        signUpLink.setOnAction(e -> stage.getScene().setRoot(new Register().getLayout(stage)));
 
-        signUpLink.setOnAction(e -> {
-            Register register = new Register();
-            stage.getScene().setRoot(register.getLayout(stage));
-        });
+        HBox signUpFooter = new HBox(footerBase, signUpLink);
+        signUpFooter.setAlignment(Pos.CENTER);
 
-        HBox footer = new HBox(footerBase, signUpLink);
-        footer.setAlignment(Pos.CENTER);
+        Separator sep = new Separator();
+        Hyperlink viewWebsite = new Hyperlink("🌐 View Website (Guest Access)");
+        viewWebsite.setStyle("-fx-text-fill: #134e4a; -fx-font-weight: bold;");
+        viewWebsite.setOnAction(e -> openGuestWebsite(stage));
 
-        loginCard.getChildren().addAll(title, subtitle, emailField, passwordField, loginBtn, footer);
+        loginCard.getChildren().addAll(title, subtitle, emailField, passwordField, loginBtn, signUpFooter, sep, viewWebsite);
         root.getChildren().add(loginCard);
-
         return root;
+    }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        Pattern pat = Pattern.compile(emailRegex);
+        return pat.matcher(email).matches();
+    }
+
+    private void openGuestWebsite(Stage stage) {
+        UserSession.setSession(0, "Guest", "guest@hotel.com", "0000", "CUSTOMER", null);
+        stage.getScene().setRoot(new CustomerDashboard().getLayout(stage));
+    }
+
+    private void navigateToDashboard(Stage stage, String role) {
+        Dashboard db = role.equalsIgnoreCase("ADMIN") ? new AdminDashboard() : new SubAdminDashboard();
+        stage.getScene().setRoot(db.getLayout(stage));
     }
 
     private void applyInputStyle(Control input) {
         input.setPrefHeight(42);
         input.setStyle("-fx-background-radius: 8; -fx-border-color: #ccc; -fx-border-radius: 8; -fx-padding: 0 12;");
-        input.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                input.setStyle("-fx-background-radius: 8; -fx-border-color: #ff8c00; -fx-border-radius: 8; -fx-padding: 0 12;");
-            } else {
-                input.setStyle("-fx-background-radius: 8; -fx-border-color: #ccc; -fx-border-radius: 8; -fx-padding: 0 12;");
-            }
-        });
     }
 
-    private void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void showAlert(Alert.AlertType type, String title, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 }

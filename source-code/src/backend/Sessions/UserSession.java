@@ -1,20 +1,20 @@
 package backend.Sessions;
 
-import backend.Roles.*;
-
 public class UserSession {
-    private static int loggedUserId;
+    private static int loggedUserId = 0;
     private static String loggedUserName;
     private static String loggedUserEmail;
     private static String loggedUserPhone;
     private static String loggedUserRole;
+    private static String loggedUserPermissions;
 
-    public static void setSession(int id,String name, String email,String phone, String role) {
-        loggedUserId=id;
+    public static void setSession(int id, String name, String email, String phone, String role, String permissions) {
+        loggedUserId = id;
         loggedUserName = name;
         loggedUserEmail = email;
-        loggedUserPhone=phone;
+        loggedUserPhone = phone;
         loggedUserRole = role;
+        loggedUserPermissions = permissions;
     }
 
     public static int getLoggedUserId() {
@@ -37,10 +37,20 @@ public class UserSession {
         return loggedUserRole;
     }
 
-    public static void clearSession(){
-        loggedUserName=null;
-        loggedUserEmail=null;
-        loggedUserPhone=null;
-        loggedUserRole=null;
+    public static String getLoggedUserPermissions() {
+        return loggedUserPermissions;
+    }
+
+    public static boolean isLoggedIn() {
+        return loggedUserId > 0;
+    }
+
+    public static void clearSession() {
+        loggedUserId = 0;
+        loggedUserName = null;
+        loggedUserEmail = null;
+        loggedUserPhone = null;
+        loggedUserRole = null;
+        loggedUserPermissions = null;
     }
 }

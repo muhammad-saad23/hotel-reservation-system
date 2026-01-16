@@ -6,10 +6,10 @@ import java.util.*;
 
 public class RoomManagement {
 
-    private ArrayList<Room> rooms ;
+    private ArrayList<Room> rooms;
 
-    public RoomManagement(){
-        this.rooms=new ArrayList<>(RoomService.loadRooms());
+    public RoomManagement() {
+        this.rooms = new ArrayList<>(RoomService.loadRooms());
     }
 
     public void addRoom(Room room) {
@@ -19,12 +19,11 @@ public class RoomManagement {
     }
 
     public void viewRooms() {
-        rooms =new ArrayList<>(RoomService.loadRooms());
+        this.rooms = new ArrayList<>(RoomService.loadRooms());
         if (rooms.isEmpty()) {
             System.out.println("No rooms available.");
             return;
         }
-
         for (Room room : rooms) {
             room.DisplayDetails();
             System.out.println("--------------------");
@@ -32,20 +31,18 @@ public class RoomManagement {
     }
 
     public void deleteRoom(int roomNumber) {
-        boolean removed=rooms.removeIf(room -> room.getRoomNumber()==roomNumber);
+        boolean removed = rooms.removeIf(room -> room.getRoomNumber() == roomNumber);
         if (removed) {
             RoomService.saveRooms(rooms);
             System.out.println("Room deleted");
-        }else {
+        } else {
             System.out.println("Room not found!");
         }
-
     }
 
     public void updateRoom(int roomNumber, String description, String roomType, Double pricePerNight, Boolean isAvailable) {
         for (Room room : rooms) {
             if (room.getRoomNumber() == roomNumber) {
-
                 if (description != null) room.setDescription(description);
                 if (roomType != null) room.setRoomType(roomType);
                 if (pricePerNight != null && pricePerNight > 0) room.setPricePerNight(pricePerNight);
@@ -60,6 +57,7 @@ public class RoomManagement {
     }
 
     public ArrayList<Room> getRooms() {
+        this.rooms = new ArrayList<>(RoomService.loadRooms());
         return rooms;
     }
 }

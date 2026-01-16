@@ -4,18 +4,21 @@ import backend.RoomsManagement.RoomManagement;
 
 public class Customer extends User {
 
-
     private RoomManagement manager;
 
-    public Customer(int id,String name, String email, String phone, String password,String role,
-                    RoomManagement manager) {
-        super(id,name, email, phone, password,role);
+    public Customer(int id, String name, String email, String phone, String password, String role,
+                    String permissions,RoomManagement manager) {
+        super(id, name, email, phone, password, role,permissions);
         this.manager = manager;
     }
 
-    public Customer(int id,String email, String password,String role) {
-        super( id,"Unknown", email, "N/A", password,role);
+    public Customer(int id, String email, String password, String role,String permissions) {
+        super(id, "Unknown", email, "N/A", password, role,permissions);
         this.manager = new RoomManagement();
+    }
+
+    public static Customer createGuest(int id, String name, String email, String phone) {
+        return new Customer(id, name, email, phone, null, "Customer", null,new RoomManagement());
     }
 
     public void viewRooms() {
@@ -31,6 +34,7 @@ public class Customer extends User {
 
     @Override
     public String toString() {
-        return getId()+","+getName() + "," + getEmail() + "," + getPhone() + "," + getPassword() + ",Customer";
+        String pass = (getPassword() == null) ? "GUEST_USER" : getPassword();
+        return getId() + "," + getName() + "," + getEmail() + "," + getPhone() + "," + pass + ",Customer";
     }
 }

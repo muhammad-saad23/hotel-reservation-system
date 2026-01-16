@@ -1,9 +1,10 @@
 package Frontend.views.List;
 
-import FileHandling.RoomService;
+import backend.RoomsManagement.RoomManagement;
 import Frontend.views.Dashboard.Layout;
 import Frontend.views.Forms.RoomForm;
 import backend.Rooms.Room;
+import backend.Sessions.UserSession;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,113 +14,157 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import java.util.List;
 
 public class RoomList implements ListUi {
+    private RoomManagement roomManager = new RoomManagement();
+    private ObservableList<Room> masterData = FXCollections.observableArrayList();
+    private FilteredList<Room> filteredData;
 
     @Override
     public void show(Stage stage) {
-        VBox content = new VBox(25);
+        String role = UserSession.getLoggedUserRole();
+        String name = UserSession.getLoggedUserName();
+        String perms = UserSession.getLoggedUserPermissions();
+
+        if (perms == null) perms = "";
+        String pUpper = perms.toUpperCase();
+
+        boolean isAdmin = role != null && role.equalsIgnoreCase("Admin");
+        boolean canAdd = isAdmin || pUpper.contains("ADDROOMS");
+        boolean canEdit = isAdmin || pUpper.contains("EDITROOMS");
+        boolean canDelete = isAdmin || pUpper.contains("DELETEROOMS");
+
+        VBox content = new VBox(20);
         content.setPadding(new Insets(30));
-        content.setStyle("-fx-background-color: #f8fafc;");
 
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
-
         VBox titleBox = new VBox(5);
-        Label title = new Label("Hospital Room Directory");
-        title.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
-        Label sub = new Label("Real-time room availability and management");
-        sub.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px;");
-        titleBox.getChildren().addAll(title, sub);
+        Label title = new Label("Room Inventory Management");
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #0f172a;");
+        titleBox.getChildren().addAll(title, new Label("Manage rooms based on your assigned access."));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
+        header.getChildren().addAll(titleBox, spacer);
 
-        Button btnAddRoom = new Button("➕ Add New Room");
-        btnAddRoom.setStyle("-fx-background-color: #ff8c00; -fx-text-fill: white; -fx-font-weight: bold; " +
-                "-fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+        if (canAdd) {
+            Button btnAddRoom = new Button("➕ Add New Room");
+            btnAddRoom.setStyle("-fx-background-color: #4338ca; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10 20; -fx-font-weight: bold;");
+            btnAddRoom.setOnAction(e -> stage.getScene().setRoot(new RoomForm().getLayout(stage)));
+            header.getChildren().add(btnAddRoom);
+        }
 
-        btnAddRoom.setOnAction(e -> {
-             RoomForm roomForm =new RoomForm();
-             stage.getScene().setRoot(roomForm.getLayout(stage));
-        });
+        HBox filterBar = new HBox(15);
+        filterBar.setAlignment(Pos.CENTER_LEFT);
 
-        header.getChildren().addAll(titleBox, spacer, btnAddRoom);
-
-        // --- Search Bar Section ---
         TextField searchField = new TextField();
-        searchField.setPromptText("🔍 Search by Room No, Type or Status...");
-        searchField.setPrefWidth(400);
-        searchField.setStyle("-fx-background-radius: 10; -fx-padding: 12; -fx-border-color: #e2e8f0; -fx-background-color: white;");
+        searchField.setPromptText("🔍 Search rooms...");
+        searchField.setPrefWidth(320);
+        searchField.setStyle("-fx-padding: 10; -fx-background-radius: 10; -fx-border-color: #cbd5e1;");
 
-        TableView<String[]> table = new TableView<>();
-        table.setPrefHeight(500);
+        ComboBox<String> typeFilter = new ComboBox<>();
+        typeFilter.getItems().addAll("All Categories", "Single", "Double", "Deluxe", "Suite");
+        typeFilter.setValue("All Categories");
+        typeFilter.setPrefHeight(40);
+
+        ComboBox<String> statusFilter = new ComboBox<>();
+        statusFilter.getItems().addAll("All Status", "Available", "Occupied");
+        statusFilter.setValue("All Status");
+        statusFilter.setPrefHeight(40);
+
+        filterBar.getChildren().addAll(searchField, typeFilter, statusFilter);
+
+        TableView<Room> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setStyle("-fx-background-radius: 15; -fx-border-radius: 15; -fx-border-color: #e2e8f0;");
+        table.setPrefHeight(600);
 
-        TableColumn<String[], String> colNo = new TableColumn<>("Room No");
-        colNo.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[0]));
+        TableColumn<Room, String> colNo = new TableColumn<>("Room #");
+        colNo.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getRoomNumber())));
 
-        TableColumn<String[], String> colType = new TableColumn<>("Type");
-        colType.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[1]));
+        TableColumn<Room, String> colType = new TableColumn<>("Category");
+        colType.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getRoomType()));
 
-        TableColumn<String[], String> colPrice = new TableColumn<>("Price/Day");
-        colPrice.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[2]));
+        TableColumn<Room, String> colPrice = new TableColumn<>("Price/Night");
+        colPrice.setCellValueFactory(d -> new SimpleStringProperty("Rs. " + d.getValue().getPricePerNight()));
 
-        TableColumn<String[], String> colStatus = new TableColumn<>("Status");
-        colStatus.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[3]));
-
-        colStatus.setCellFactory(column -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    if (item.equalsIgnoreCase("Available")) {
-                        setStyle("-fx-text-fill: #10b981; -fx-font-weight: bold;");
-                    } else {
-                        setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold;");
-                    }
-                }
-            }
-        });
+        TableColumn<Room, String> colStatus = new TableColumn<>("Status");
+        colStatus.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().isAvailable() ? "Available" : "Occupied"));
 
         table.getColumns().addAll(colNo, colType, colPrice, colStatus);
 
-        List<Room> rooms = RoomService.loadRooms();
-        ObservableList<String[]> tableData = FXCollections.observableArrayList();
+        if (canEdit || canDelete) {
+            TableColumn<Room, Void> colActions = new TableColumn<>("Actions");
+            colActions.setCellFactory(param -> new TableCell<>() {
+                private final Button btnEdit = new Button("✏️");
+                private final Button btnDelete = new Button("🗑️");
+                private final HBox pane = new HBox(10, btnEdit, btnDelete);
+                {
+                    pane.setAlignment(Pos.CENTER);
 
-        for (Room r : rooms) {
-            String status = r.isAvailable() ? "Available" : "Occupied";
-            tableData.add(new String[]{
-                    String.valueOf(r.getRoomNumber()),
-                    r.getRoomType(),
-                    "Rs. " + r.getPricePerNight(),
-                    status
+                    btnEdit.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 5;");
+                    btnEdit.setVisible(canEdit);
+                    btnEdit.setManaged(canEdit);
+
+                    btnDelete.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 5;");
+                    btnDelete.setVisible(canDelete);
+                    btnDelete.setManaged(canDelete);
+
+                    btnDelete.setOnAction(e -> {
+                        Room room = getTableView().getItems().get(getIndex());
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete Room #" + room.getRoomNumber() + "?", ButtonType.YES, ButtonType.NO);
+                        alert.showAndWait().ifPresent(res -> {
+                            if (res == ButtonType.YES) {
+                                roomManager.deleteRoom(room.getRoomNumber());
+                                masterData.remove(room);
+                                table.refresh();
+                            }
+                        });
+                    });
+
+                    btnEdit.setOnAction(e -> {
+                        Room room = getTableView().getItems().get(getIndex());
+                        stage.getScene().setRoot(new RoomForm(room).getLayout(stage));
+                    });
+                }
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setGraphic(empty ? null : pane);
+                }
             });
+            table.getColumns().add(colActions);
         }
 
-        FilteredList<String[]> filteredData = new FilteredList<>(tableData, p -> true);
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(rowData -> {
-                if (newValue == null || newValue.isEmpty()) return true;
-                String lowerCaseFilter = newValue.toLowerCase();
-                return rowData[0].toLowerCase().contains(lowerCaseFilter) ||
-                        rowData[1].toLowerCase().contains(lowerCaseFilter) ||
-                        rowData[3].toLowerCase().contains(lowerCaseFilter);
-            });
-        });
-
+        masterData.setAll(roomManager.getRooms());
+        filteredData = new FilteredList<>(masterData, p -> true);
+        autoApplyFilters(searchField, typeFilter, statusFilter);
         table.setItems(filteredData);
-        table.setPlaceholder(new Label("No rooms matching your search."));
 
-        content.getChildren().addAll(header, searchField, table);
+        content.getChildren().addAll(header, filterBar, table);
+        stage.getScene().setRoot(new Layout(stage).createLayout(content, role, name));
+    }
 
-        Layout layoutManager = new Layout(stage);
-        stage.getScene().setRoot(layoutManager.createLayout(content, "Admin", "Admin User"));
+    private void autoApplyFilters(TextField search, ComboBox<String> type, ComboBox<String> status) {
+        Runnable filterLogic = () -> {
+            filteredData.setPredicate(room -> {
+                String searchText = search.getText() == null ? "" : search.getText().toLowerCase();
+                String selectedType = type.getValue();
+                String selectedStatus = status.getValue();
+
+                boolean matchesSearch = String.valueOf(room.getRoomNumber()).contains(searchText) ||
+                        room.getRoomType().toLowerCase().contains(searchText);
+                boolean matchesType = selectedType.equals("All Categories") ||
+                        room.getRoomType().equalsIgnoreCase(selectedType);
+                boolean matchesStatus = selectedStatus.equals("All Status") ||
+                        (selectedStatus.equals("Available") && room.isAvailable()) ||
+                        (selectedStatus.equals("Occupied") && !room.isAvailable());
+
+                return matchesSearch && matchesType && matchesStatus;
+            });
+        };
+        search.textProperty().addListener((obs, old, newVal) -> filterLogic.run());
+        type.valueProperty().addListener((obs, old, newVal) -> filterLogic.run());
+        status.valueProperty().addListener((obs, old, newVal) -> filterLogic.run());
     }
 }

@@ -1,3 +1,9 @@
-1,Saad,admin123@gmail.com,12345,admin123,Admin
-2,Muhammad saad,ms2245888@gmail.com,03152458881,saad123,Customer
-3,Abdullah taveer,abdullah@gmail.com,3131313,dadadda,SubAdmin,Bookings
+1,Saad,admin123@gmail.com,12345,admin123,Admin,ViewRooms|AddRooms|EditRooms|DeleteRooms|Bookings|Reports
+2,Abdullah taveer,abdullah@gmail.com,3131313,abdullah12345,SubAdmin,Rooms|Bookings|Reports
+3,hasan,hasan@gmail.com,756868,hasan123,Blocked,None
+4,Fahad junaid,fahad@gmail.com,03155458181,GUEST_USER,Customer,None
+5,Muhammad saad,ms22458881@gmail.com,03152458881,GUEST_USER,Customer,None
+6,sana junaid,sana junaid@gmail.com,133131,GUEST_USER,Customer,None
+7,junaid ahmed,junaid123@gmail.com,03122458881,GUEST_USER,Customer,None
+8,Ayesha khan,Ayesha@gmail.com,03002450138,ayesha123,SubAdmin,ViewRooms|EditRooms|Bookings
+9,shameer junaid,shameer123@gmail.com,03124558881,shameer12345,SubAdmin,ViewRooms|EditRooms|DeleteRooms|Bookings

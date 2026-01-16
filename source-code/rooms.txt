@@ -1,3 +1,2 @@
-101|Single|1000.0|false|Single room
-102|Double|2000.0|true|Double room
-103|Deluxe|2500.0|true|best room
+101|Single|1000.0|true|Single room
+103|Deluxe|3000.0|true|luxary room

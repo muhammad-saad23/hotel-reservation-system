@@ -1,8 +1,10 @@
 package Frontend.views;
 
 import FileHandling.AuthService;
-import backend.Roles.Customer;
+import backend.Roles.SubAdmin;
 import backend.RoomsManagement.RoomManagement;
+import Frontend.views.Dashboard.CustomerDashboard;
+import backend.Sessions.UserSession;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -13,7 +15,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.scene.control.Alert.AlertType;
+import java.util.regex.Pattern;
 
 public class Register {
 
@@ -23,111 +25,115 @@ public class Register {
 
         VBox regCard = new VBox(10);
         regCard.setMaxWidth(380);
-        regCard.setMaxHeight(Region.USE_PREF_SIZE);
         regCard.setPadding(new Insets(40));
         regCard.setAlignment(Pos.CENTER);
         regCard.setStyle("-fx-background-color: white; -fx-background-radius: 20; " +
                 "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 10);");
 
-        Label title = new Label("Registration");
+        Label title = new Label("Staff Registration");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
 
-        Label subtitle = new Label("Join us! Create your account to book rooms.");
+        Label subtitle = new Label("Create a new Sub-Admin account.");
         subtitle.setTextFill(Color.web("#777777"));
-        subtitle.setPadding(new Insets(0, 0, 15, 0));
 
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Full Name");
-        applyInputStyle(usernameField);
+        TextField nameF = new TextField();
+        nameF.setPromptText("Full Name");
+        applyInputStyle(nameF);
 
-        TextField phoneField = new TextField();
-        phoneField.setPromptText("Phone Number");
-        applyInputStyle(phoneField);
-
-        phoneField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.matches("\\d*")) {
-                phoneField.setText(newVal.replaceAll("[^\\d]", ""));
+        TextField phoneF = new TextField();
+        phoneF.setPromptText("Phone Number");
+        applyInputStyle(phoneF);
+        phoneF.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*")) {
+                phoneF.setText(newValue.replaceAll("[^\\d]", ""));
             }
         });
 
-        TextField emailField = new TextField();
-        emailField.setPromptText("Email Address");
-        applyInputStyle(emailField);
+        TextField emailF = new TextField();
+        emailF.setPromptText("Email Address");
+        applyInputStyle(emailF);
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        applyInputStyle(passwordField);
+        PasswordField passF = new PasswordField();
+        passF.setPromptText("Password");
+        applyInputStyle(passF);
 
-        Button regBtn = new Button("Create Account");
+        Button regBtn = new Button("Register");
         regBtn.setMaxWidth(Double.MAX_VALUE);
         regBtn.setPrefHeight(45);
-        regBtn.setStyle("-fx-background-color: #ff8c00; -fx-text-fill: white; -fx-font-weight: bold; " +
-                "-fx-background-radius: 10; -fx-cursor: hand;");
+        regBtn.setStyle("-fx-background-color: #134e4a; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;");
 
         regBtn.setOnAction(e -> {
-            String name = usernameField.getText().trim();
-            String phone = phoneField.getText().trim();
-            String email = emailField.getText().trim();
-            String password = passwordField.getText().trim();
+            String email = emailF.getText().trim();
+            String name = nameF.getText().trim();
+            String phone = phoneF.getText().trim();
+            String pass = passF.getText().trim();
 
-            if (name.isEmpty() || phone.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                showAlert(AlertType.ERROR, "Registration Error", "Please fill in all fields.");
+            if(name.isEmpty() || email.isEmpty() || phone.isEmpty() || pass.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Empty Fields", "Please fill all fields.");
                 return;
             }
 
-            // --- Unique ID Generate Karein ---
-            int nextId = AuthService.getNextId();
+            if (!isValidEmail(email)) {
+                showAlert(Alert.AlertType.WARNING, "Invalid Email", "Please enter a valid email address.");
+                return;
+            }
 
-            // Customer object create karein (ID pass kar di gai hai)
-            Customer newCustomer = new Customer(nextId, name, email, phone, password, "Customer", new RoomManagement());
+            if (AuthService.isEmailExists(email)) {
+                showAlert(Alert.AlertType.ERROR, "Duplicate Email", "This email is already registered.");
+                return;
+            }
 
-            if (AuthService.registerUser(newCustomer)) {
-                showAlert(AlertType.INFORMATION, "Success", "Customer account created successfully");
-                Login login = new Login();
-                stage.getScene().setRoot(login.getLayout(stage));
+            if (AuthService.isPhoneExists(phone)) {
+                showAlert(Alert.AlertType.ERROR, "Duplicate Phone", "This phone number is already registered.");
+                return;
+            }
+
+            SubAdmin newStaff = new SubAdmin(AuthService.getNextId(), name, email, phone, pass, "SubAdmin", new RoomManagement(), "None");
+
+            if (AuthService.registerUser(newStaff)) {
+                showAlert(Alert.AlertType.INFORMATION, "Success", "Account Created Successfully!");
+                stage.getScene().setRoot(new Login().getLayout(stage));
             } else {
-                showAlert(AlertType.ERROR, "Failed", "Registration failed. Please try again.");
+                showAlert(Alert.AlertType.ERROR, "System Error", "Failed to save data.");
             }
         });
 
-        Text footerBase = new Text("Already have an account? ");
         Hyperlink loginLink = new Hyperlink("Log In");
         loginLink.setStyle("-fx-text-fill: #1e90ff; -fx-font-weight: bold;");
+        loginLink.setOnAction(e -> stage.getScene().setRoot(new Login().getLayout(stage)));
 
-        loginLink.setOnAction(e -> {
-            Login login = new Login();
-            stage.getScene().setRoot(login.getLayout(stage));
+        HBox loginFooter = new HBox(new Text("Already have an account? "), loginLink);
+        loginFooter.setAlignment(Pos.CENTER);
+
+        Separator sep = new Separator();
+        Hyperlink viewWebsite = new Hyperlink("🌐 View Website (Guest Access)");
+        viewWebsite.setStyle("-fx-text-fill: #134e4a; -fx-font-weight: bold;");
+        viewWebsite.setOnAction(e -> {
+            UserSession.setSession(0, "Guest", "guest@hotel.com", "0000", "CUSTOMER", null);
+            stage.getScene().setRoot(new CustomerDashboard().getLayout(stage));
         });
 
-        HBox footer = new HBox(footerBase, loginLink);
-        footer.setAlignment(Pos.CENTER);
-        footer.setPadding(new Insets(10, 0, 0, 0));
-
-        regCard.getChildren().addAll(title, subtitle, usernameField, phoneField, emailField, passwordField, regBtn, footer);
+        regCard.getChildren().addAll(title, subtitle, nameF, phoneF, emailF, passF, regBtn, loginFooter, sep, viewWebsite);
         root.getChildren().add(regCard);
-
         return root;
+    }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        Pattern pat = Pattern.compile(emailRegex);
+        return pat.matcher(email).matches();
     }
 
     private void applyInputStyle(Control input) {
         input.setPrefHeight(42);
-        input.setStyle("-fx-background-radius: 8; -fx-border-color: #ccc; -fx-border-radius: 8; " +
-                "-fx-background-color: white; -fx-padding: 0 12;");
-
-        input.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                input.setStyle("-fx-background-radius: 8; -fx-border-color: #ff8c00; -fx-border-radius: 8; -fx-padding: 0 12;");
-            } else {
-                input.setStyle("-fx-background-radius: 8; -fx-border-color: #ccc; -fx-border-radius: 8; -fx-padding: 0 12;");
-            }
-        });
+        input.setStyle("-fx-background-radius: 8; -fx-border-color: #ccc; -fx-border-radius: 8; -fx-padding: 0 12;");
     }
 
-    private void showAlert(AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void showAlert(Alert.AlertType type, String title, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 }

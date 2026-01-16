@@ -1,0 +1,11 @@
+--- Booking Summary ---
+Status:         ACTIVE
+Booking ID:     62367
+Customer:       junaid ahmed
+Contact:        junaid123@gmail.com
+Room Number:    103
+Stay Period:    2026-01-17 to 2026-01-19
+Payment:        Credit/Debit Card
+-----------------------
+TOTAL AMOUNT:   Rs. 7000.0
+-----------------------

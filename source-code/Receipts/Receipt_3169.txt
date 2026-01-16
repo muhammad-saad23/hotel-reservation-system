@@ -1,0 +1,11 @@
+--- Booking Summary ---
+Status:         ACTIVE
+Booking ID:     3169
+Customer:       sarah khan
+Contact:        sarah@gmail.com
+Room Number:    103
+Stay Period:    2026-01-17 to 2026-01-20
+Payment:        Credit/Debit Card
+-----------------------
+TOTAL AMOUNT:   Rs. 11000.0
+-----------------------
